@@ -24,7 +24,7 @@
 
 2. **gitee** (必填)
    - `repo_url`: Gitee 仓库的完整 HTTPS 地址
-   - `branch`: 要同步的源分支名称
+   - `branch`: 要同步的源分支名称，为 * 表示同步所有分支
 
 3. **github** (必填)
    - `repo_name`: 目标 GitHub 仓库名称
@@ -33,6 +33,7 @@
    - `branch`: 目标分支名称（可选）
      - 如果不指定，将使用与 Gitee 相同的分支名
      - 可以与源分支名称不同
+     - 同步所有分支时，此设置无效
    - `private`: 仓库可见性设置
      - `true`: 创建/设置为私有仓库
      - `false`: 创建/设置为公开仓库
@@ -50,7 +51,8 @@
 
 在 GitHub 仓库的 Settings -> Secrets and variables -> Actions 中添加以下 secrets：
 
-- `GH_TOKEN`: GitHub Personal Access Token，需要有创建和管理仓库的权限(获取token路径：Settings -> Developer Settings -> Personal access tokens)
+- `GH_USERNAME`: 需要同步至的 GitHub 用户的用户名
+- `GH_TOKEN`: GitHub Personal Access Token，需要上面所配置的`GH_USERNAME`用户的创建和管理仓库的权限(获取token路径：Settings -> Developer Settings -> Personal access tokens)
 - `GITEE_USERNAME`: Gitee 用户名
 - `GITEE_PASSWORD`: Gitee 密码或访问令牌
 
@@ -58,8 +60,6 @@
 
 工作流默认在以下时间点（东八区）运行：
 - 14:00 - 检查上午的更新
-- 22:00 - 检查下午的更新
-- 23:00 - 第一次晚间同步
 - 24:00 - 最后一次同步
 
 ### 4. 手动触发同步
