@@ -4,12 +4,12 @@ repositories:
     gitee:
       # Gitee 仓库完整地址
       repo_url: "https://gitee.com/cyoukon/NexusGateway.git"
-      # 要同步的源分支
-      branch: "master"
+      # 要同步的源分支，为 * 表示同步所有分支
+      branch: "*"
     github:
       # GitHub 目标仓库名称
       repo_name: "NexusGateway"
-      # GitHub 目标分支名称（可选，默认与 Gitee 分支相同）
+      # GitHub 目标分支名称（可选，默认与 Gitee 分支相同，同步所有分支时，此设置无效）
       branch: "master"
       # 是否为私有仓库
       private: true
