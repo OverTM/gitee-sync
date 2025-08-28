@@ -114,12 +114,25 @@ jobs:
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           
-          echo "📥 正在克隆 Gitee 仓库的 ${GITEE_BRANCH} 分支..."
+          echo "📥 准备克隆 Gitee 仓库..."
           # 构建包含认证信息的 URL
           GITEE_AUTH_URL=$(echo "$GITEE_REPO_URL" | sed "s|https://|https://$GITEE_USERNAME:$GITEE_PASSWORD@|")
-          if ! git clone -b "$GITEE_BRANCH" "$GITEE_AUTH_URL" temp; then
-            echo "❌ 克隆 Gitee 仓库失败"
-            exit 1
+          
+          if [ "$GITEE_BRANCH" = "*" ]; then
+            echo "🌿 分支设置为 *, 将克隆所有分支..."
+            if ! git clone --mirror "$GITEE_AUTH_URL" temp; then
+              echo "❌ 镜像克隆 Gitee 仓库失败"
+              exit 1
+            fi
+            cd temp
+            git config --bool core.bare false
+            cd ..
+          else
+            echo "🌿 正在克隆 Gitee 仓库的 ${GITEE_BRANCH} 分支..."
+            if ! git clone -b "$GITEE_BRANCH" "$GITEE_AUTH_URL" temp; then
+              echo "❌ 克隆 Gitee 仓库失败"
+              exit 1
+            fi
           fi
           
           echo "📋 检查仓库内容..."
@@ -147,44 +160,39 @@ jobs:
           
           echo "🔄 检测到更改，开始同步..."
           
-          echo "📋 准备工作目录..."
-          WORK_DIR="sync_workspace"
-          rm -rf $WORK_DIR
-          mkdir -p $WORK_DIR
-          
-          echo "📋 复制文件到工作目录..."
-          cd temp
-          shopt -s extglob
-          cp -r !(*.git|.github) "../$WORK_DIR/"
-          cd ..
-          rm -rf temp
-          
           echo "🔄 准备推送代码..."
-          cd $WORK_DIR
+          cd temp
           
-          # 初始化 git
-          git init
-          echo "🔄 开始准备推送代码到 GitHub..."
-          
-          git add .
-          echo "✅ 已添加所有文件到暂存区"
-          
-          git commit -m "Sync from Gitee $(date '+%Y-%m-%d %H:%M:%S')
-            Gitee Commit: ${GITEE_LATEST_COMMIT}"
-          echo "✅ 已创建提交记录"
-          
-          # 推送到 GitHub
+          # 添加 GitHub 作为远程仓库
           echo "🔗 正在配置 GitHub 远程仓库地址..."
-          git remote add origin "https://$GH_TOKEN@github.com/$GITHUB_USER/$GITHUB_REPO.git"
+          git remote add github "https://$GH_TOKEN@github.com/$GITHUB_USER/$GITHUB_REPO.git"
           echo "✅ 远程仓库配置完成"
           
-          echo "🌿 正在切换到 ${GITHUB_BRANCH} 分支..."
-          git branch -M ${GITHUB_BRANCH}
-          echo "✅ 分支切换完成"
-          
-          echo "⬆️ 正在推送代码到 GitHub..."
-          git push -f origin ${GITHUB_BRANCH}
-          echo "🎉 代码推送完成！"
+          if [ "$GITEE_BRANCH" = "*" ]; then
+            # 同步所有分支
+            echo "🌿 分支设置为 *, 开始同步所有分支和标签..."
+            # 推送所有分支
+            git push -f github --all
+            # 推送所有标签
+            git push -f github --tags
+            echo "🎉 所有分支和标签同步完成！保留了所有原始提交历史！"
+          else
+            # 确保本地分支与要推送的分支名称一致
+            echo "🌿 正在检查本地分支..."
+            if ! git show-ref --verify --quiet refs/heads/${GITHUB_BRANCH}; then
+              echo "🔄 创建本地 ${GITHUB_BRANCH} 分支..."
+              git checkout -b ${GITHUB_BRANCH}
+            else
+              echo "🌿 切换到 ${GITHUB_BRANCH} 分支..."
+              git checkout ${GITHUB_BRANCH}
+            fi
+            
+            # 推送到 GitHub，保留完整提交历史
+            echo "⬆️ 正在推送代码到 GitHub (保留完整提交历史)..."
+            # 强制推送以确保GitHub仓库与Gitee完全一致
+            git push -f github ${GITHUB_BRANCH}
+            echo "🎉 代码推送完成！保留了所有原始提交历史！"
+          fi
           
           cd ..
-          rm -rf $WORK_DIR 
+          rm -rf temp
