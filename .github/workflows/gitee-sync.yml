@@ -75,7 +75,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           GITHUB_REPO: ${{ steps.config.outputs.github_repo_name }}
-          GITHUB_USER: ${{ github.repository_owner }}
+          GITHUB_USER: ${{ secrets.GH_USERNAME }}
           GITHUB_PRIVATE: ${{ steps.config.outputs.github_private }}
         run: |
           echo "🔍 正在检查 GitHub 仓库是否存在..."
@@ -106,7 +106,7 @@ jobs:
           GITHUB_REPO: ${{ steps.config.outputs.github_repo_name }}
           GITHUB_BRANCH: ${{ steps.config.outputs.github_branch }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          GITHUB_USER: ${{ github.repository_owner }}
+          GITHUB_USER: ${{ secrets.GH_USERNAME }}
           GITEE_USERNAME: ${{ secrets.GITEE_USERNAME }}
           GITEE_PASSWORD: ${{ secrets.GITEE_PASSWORD }}
         run: |
